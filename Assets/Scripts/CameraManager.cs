@@ -1,4 +1,6 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
+using System.Collections;
 
 public class CameraManager : MonoBehaviour
 {
@@ -7,9 +9,12 @@ public class CameraManager : MonoBehaviour
 
     private Camera currentCamera;
 
+    public Image fadeImage;
+    public float fadeDuration = 1f;
+
     void Start()
     {
-        SwitchCamera(mainCamera);
+        SwitchCameraInstant(mainCamera);
     }
 
     public void SwitchToCamera(int cameraIndex)
@@ -17,18 +22,43 @@ public class CameraManager : MonoBehaviour
         if (cameraIndex < 0 || cameraIndex >= otherCameras.Length)
             return;
 
-        SwitchCamera(otherCameras[cameraIndex]);
+        StartCoroutine(FadeSwitch(otherCameras[cameraIndex]));
     }
 
     public void SwitchToMainCamera()
     {
-        SwitchCamera(mainCamera);
+        StartCoroutine(FadeSwitch(mainCamera));
     }
 
-    void SwitchCamera(Camera newCam)
+    IEnumerator FadeSwitch(Camera newCam)
     {
-        if (currentCamera == newCam) return;
+        if (currentCamera == newCam) yield break;
 
+        float t = 0;
+
+        // Fade Out
+        while (t < fadeDuration)
+        {
+            t += Time.deltaTime;
+            fadeImage.color = new Color(0, 0, 0, t / fadeDuration);
+            yield return null;
+        }
+
+        SwitchCameraInstant(newCam);
+
+        // Fade In
+        t = fadeDuration;
+
+        while (t > 0)
+        {
+            t -= Time.deltaTime;
+            fadeImage.color = new Color(0, 0, 0, t / fadeDuration);
+            yield return null;
+        }
+    }
+
+    void SwitchCameraInstant(Camera newCam)
+    {
         mainCamera.enabled = false;
 
         foreach (Camera cam in otherCameras)
